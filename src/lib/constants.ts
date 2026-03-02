@@ -3,7 +3,7 @@ export const ROLES = ["TECH", "SE", "UL", "ESCALATION"] as const;
 export const ROLE_LABELS: Record<string, string> = {
   TECH: "Technician",
   SE: "Systems Engineer",
-  UL: "Unit Lead",
+  UL: "UL",
   ESCALATION: "Escalation",
 };
 
