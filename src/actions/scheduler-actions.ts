@@ -54,6 +54,20 @@ export async function acceptAllSuggestions(quarterId: string) {
   return { success: true, confirmed: result.count };
 }
 
+export async function clearAllAssignments(quarterId: string) {
+  const session = await auth();
+  if (!session?.user?.isAdmin) throw new Error("Unauthorized");
+
+  await prisma.assignment.deleteMany({
+    where: { week: { quarterId } },
+  });
+
+  revalidatePath("/schedule");
+  revalidatePath("/admin/quarters");
+
+  return { success: true };
+}
+
 export async function getGaps(quarterId: string) {
   const session = await auth();
   if (!session?.user?.isAdmin) throw new Error("Unauthorized");

@@ -3,9 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Wand2, CheckCheck, Send, Archive } from "lucide-react";
+import { Wand2, CheckCheck, Send, Archive, Trash2 } from "lucide-react";
 import { updateQuarterStatus } from "@/actions/quarter-actions";
-import { runAutoScheduler, acceptAllSuggestions } from "@/actions/scheduler-actions";
+import { runAutoScheduler, acceptAllSuggestions, clearAllAssignments } from "@/actions/scheduler-actions";
 import { toast } from "sonner";
 
 interface Props {
@@ -42,6 +42,19 @@ export function QuarterDetailActions({ quarter }: Props) {
       router.refresh();
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed to confirm");
+    }
+    setLoading(false);
+  }
+
+  async function handleClearAll() {
+    if (!confirm("Clear all assignments from this schedule? This cannot be undone.")) return;
+    setLoading(true);
+    try {
+      await clearAllAssignments(quarter.id);
+      toast.success("All assignments cleared");
+      router.refresh();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed to clear");
     }
     setLoading(false);
   }
@@ -89,6 +102,14 @@ export function QuarterDetailActions({ quarter }: Props) {
           >
             <CheckCheck className="mr-2 h-4 w-4" />
             Confirm All
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={handleClearAll}
+            disabled={loading}
+          >
+            <Trash2 className="mr-2 h-4 w-4" />
+            Clear All
           </Button>
           <Button onClick={handlePublish} disabled={loading}>
             <Send className="mr-2 h-4 w-4" />
