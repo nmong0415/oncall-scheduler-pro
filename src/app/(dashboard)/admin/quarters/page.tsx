@@ -9,6 +9,7 @@ import { Plus, Eye, Trash2, Send, Archive } from "lucide-react";
 import { format } from "date-fns";
 import { QUARTER_STATUS_LABELS } from "@/lib/constants";
 import { QuarterActions } from "@/components/admin/quarter-actions";
+import { ClearAllQuarters } from "@/components/admin/clear-all-quarters";
 
 export default async function QuartersPage() {
   const quarters = await getQuarters();
@@ -17,17 +18,20 @@ export default async function QuartersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Quarters</h2>
+          <h2 className="text-2xl font-bold tracking-tight">On Call Schedule</h2>
           <p className="text-muted-foreground">
-            Manage quarterly on-call scheduling periods.
+            Manage on-call scheduling periods.
           </p>
         </div>
-        <Link href="/admin/quarters/new">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Quarter
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          {quarters.length > 0 && <ClearAllQuarters />}
+          <Link href="/admin/quarters/new">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              New Quarter
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {quarters.length === 0 ? (

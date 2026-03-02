@@ -107,6 +107,17 @@ export async function toggleWeekHoliday(
   return { success: true };
 }
 
+export async function deleteAllQuarters() {
+  const session = await auth();
+  if (!session?.user?.isAdmin) throw new Error("Unauthorized");
+
+  await prisma.quarter.deleteMany({});
+
+  revalidatePath("/admin/quarters");
+  revalidatePath("/schedule");
+  return { success: true };
+}
+
 export async function getQuarters() {
   return prisma.quarter.findMany({
     include: {

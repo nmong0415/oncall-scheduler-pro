@@ -25,7 +25,7 @@ const userLinks = [
 ];
 
 const adminLinks = [
-  { href: "/admin/quarters", label: "Quarters", icon: FolderCog },
+  { href: "/admin/quarters", label: "On Call Schedule", icon: FolderCog },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
