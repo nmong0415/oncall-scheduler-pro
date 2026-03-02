@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  TECH
+  SE
+  UL
+  ESCALATION
+}
+
+enum QuarterStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum AssignmentStatus {
+  SUGGESTED
+  CONFIRMED
+  LOCKED
+}
+
+enum PreferenceType {
+  PREFERRED
+  AVAILABLE
+  UNAVAILABLE
+}
+
+enum SwapStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String?
+  role      Role
+  isAdmin   Boolean  @default(false)
+  isActive  Boolean  @default(true)
+  azureAdId String?  @unique
+  calendarToken String? @unique @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignments      Assignment[]
+  preferences      Preference[]
+  swapRequestsFrom SwapRequest[]    @relation("SwapFrom")
+  swapRequestsTo   SwapRequest[]    @relation("SwapTo")
+  rotationHistory  RotationHistory[]
+
+  @@index([role])
+  @@index([email])
+}
+
+model Quarter {
+  id        String        @id @default(cuid())
+  name      String
+  startDate DateTime
+  endDate   DateTime
+  status    QuarterStatus @default(DRAFT)
+  preferenceDeadline DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  weeks Week[]
+
+  @@index([status])
+  @@index([startDate])
+}
+
+model Week {
+  id          String   @id @default(cuid())
+  quarterId   String
+  weekNumber  Int
+  startDate   DateTime
+  endDate     DateTime
+  isHoliday   Boolean  @default(false)
+  holidayName String?
+  createdAt   DateTime @default(now())
+
+  quarter     Quarter      @relation(fields: [quarterId], references: [id], onDelete: Cascade)
+  assignments Assignment[]
+  preferences Preference[]
+
+  @@unique([quarterId, weekNumber])
+  @@index([startDate])
+}
+
+model Assignment {
+  id        String           @id @default(cuid())
+  weekId    String
+  userId    String
+  role      Role
+  status    AssignmentStatus @default(SUGGESTED)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  week         Week          @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id])
+  swapRequests SwapRequest[] @relation("SwapAssignment")
+
+  @@unique([weekId, role])
+  @@index([userId])
+  @@index([weekId])
+}
+
+model Preference {
+  id         String         @id @default(cuid())
+  weekId     String
+  userId     String
+  preference PreferenceType
+  notes      String?
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  week Week @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([weekId, userId])
+  @@index([userId])
+}
+
+model SwapRequest {
+  id           String     @id @default(cuid())
+  assignmentId String
+  fromUserId   String
+  toUserId     String
+  status       SwapStatus @default(PENDING)
+  reason       String?
+  adminNote    String?
+  respondedAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  assignment Assignment @relation("SwapAssignment", fields: [assignmentId], references: [id])
+  fromUser   User       @relation("SwapFrom", fields: [fromUserId], references: [id])
+  toUser     User       @relation("SwapTo", fields: [toUserId], references: [id])
+
+  @@index([status])
+  @@index([fromUserId])
+  @@index([toUserId])
+}
+
+model RotationHistory {
+  id          String   @id @default(cuid())
+  userId      String
+  weekId      String?
+  role        Role
+  quarterName String
+  weekNumber  Int
+  isHoliday   Boolean  @default(false)
+  isBackToBack Boolean @default(false)
+  year        Int
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, year])
+  @@index([userId, role])
+}
+
+model AppSettings {
+  id                     String   @id @default("singleton")
+  preferenceDeadlineDays Int      @default(14)
+  maxConsecutiveWeeks    Int      @default(1)
+  notificationsEnabled   Boolean  @default(true)
+  updatedAt              DateTime @updatedAt
+}
